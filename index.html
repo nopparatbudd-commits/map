@@ -123,14 +123,17 @@
             names: []
           };
         }
-        coordinateGroups[key].names.push(m.name);
+        // Add name only if it's not already in the names array (filter duplicates)
+        if (!coordinateGroups[key].names.includes(m.name)) {
+          coordinateGroups[key].names.push(m.name);
+        }
       });
       
       // Create one marker per unique coordinate
       Object.values(coordinateGroups).forEach((group) => {
         const marker = L.marker([group.lat, group.lon]).addTo(map);
         
-        // Combine names if there are multiple markers at the same location
+        // Combine unique names if there are multiple markers at the same location
         const displayName = group.names.length > 1
           ? group.names.join(" | ")
           : group.names[0];
@@ -141,7 +144,7 @@
           offset: [-15, -12],
         });
         
-        // Create popup with all names and Google Maps link
+        // Create popup with all unique names and Google Maps link
         const gmUrl = `https://www.google.com/maps?q=${group.lat},${group.lon}`;
         const nameList = group.names.map(name => `<b>${name}</b>`).join("<br>");
         marker.bindPopup(`${nameList}<br><a href="${gmUrl}" target="_blank">Open in Google Maps</a>`);
