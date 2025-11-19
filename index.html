@@ -116,8 +116,11 @@
         marker.bindTooltip(m.name, {
           permanent: true,
           direction: "top",
-          offset: [0, 0],
+          offset: [-15, -12],
         });
+        // เพิ่ม popup ให้มีปุ่มเปิด Google Maps
+  const gmUrl = `https://www.google.com/maps?q=${m.lat},${m.lon}`;
+  marker.bindPopup(`<b>${m.name}</b><br><a href="${gmUrl}" target="_blank">Open in Google Maps</a>`);
         bounds.push([m.lat, m.lon]);
       });
 
