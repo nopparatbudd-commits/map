@@ -110,18 +110,43 @@
 
       const markers = getMarkersFromURL();
       const bounds = [];
-
+      
+      // Group markers by coordinates to handle duplicates
+      const coordinateGroups = {};
+      
       markers.forEach((m) => {
-        const marker = L.marker([m.lat, m.lon]).addTo(map);
-        marker.bindTooltip(m.name, {
+        const key = `${m.lat},${m.lon}`;
+        if (!coordinateGroups[key]) {
+          coordinateGroups[key] = {
+            lat: m.lat,
+            lon: m.lon,
+            names: []
+          };
+        }
+        coordinateGroups[key].names.push(m.name);
+      });
+      
+      // Create one marker per unique coordinate
+      Object.values(coordinateGroups).forEach((group) => {
+        const marker = L.marker([group.lat, group.lon]).addTo(map);
+        
+        // Combine names if there are multiple markers at the same location
+        const displayName = group.names.length > 1
+          ? group.names.join(" | ")
+          : group.names[0];
+          
+        marker.bindTooltip(displayName, {
           permanent: true,
           direction: "top",
           offset: [-15, -12],
         });
-        // เพิ่ม popup ให้มีปุ่มเปิด Google Maps
-  const gmUrl = `https://www.google.com/maps?q=${m.lat},${m.lon}`;
-  marker.bindPopup(`<b>${m.name}</b><br><a href="${gmUrl}" target="_blank">Open in Google Maps</a>`);
-        bounds.push([m.lat, m.lon]);
+        
+        // Create popup with all names and Google Maps link
+        const gmUrl = `https://www.google.com/maps?q=${group.lat},${group.lon}`;
+        const nameList = group.names.map(name => `<b>${name}</b>`).join("<br>");
+        marker.bindPopup(`${nameList}<br><a href="${gmUrl}" target="_blank">Open in Google Maps</a>`);
+        
+        bounds.push([group.lat, group.lon]);
       });
 
       if (bounds.length > 0) {
