@@ -129,6 +129,25 @@
         }
       });
       
+      // Group markers by name to find same names at different locations
+      const nameGroups = {};
+      
+      markers.forEach((m) => {
+        if (!nameGroups[m.name]) {
+          nameGroups[m.name] = [];
+        }
+        // Check if this location is already in the group (avoid duplicates)
+        const exists = nameGroups[m.name].some(item =>
+          item.lat === m.lat && item.lon === m.lon
+        );
+        if (!exists) {
+          nameGroups[m.name].push({
+            lat: m.lat,
+            lon: m.lon
+          });
+        }
+      });
+      
       // Create one marker per unique coordinate
       Object.values(coordinateGroups).forEach((group) => {
         const marker = L.marker([group.lat, group.lon]).addTo(map);
@@ -150,6 +169,30 @@
         marker.bindPopup(`${nameList}<br><a href="${gmUrl}" target="_blank">Open in Google Maps</a>`);
         
         bounds.push([group.lat, group.lon]);
+      });
+
+      // Draw lines between markers with the same name but different locations
+      Object.keys(nameGroups).forEach(name => {
+        const locations = nameGroups[name];
+        
+        // Only draw lines if there are multiple locations for the same name
+        if (locations.length > 1) {
+          const latlngs = locations.map(loc => [loc.lat, loc.lon]);
+          
+          // Create a polyline connecting locations with the same name
+          const polyline = L.polyline(latlngs, {
+            color: '#0078ff',
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '10, 5'
+          }).addTo(map);
+          
+          // Add a tooltip to the line showing which name is connected
+          polyline.bindTooltip(`เชื่อมโยง: ${name}`, {
+            permanent: false,
+            direction: 'center'
+          });
+        }
       });
 
       if (bounds.length > 0) {
